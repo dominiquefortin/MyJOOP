@@ -84,9 +84,9 @@ limitations under the License.
           });
    *
    *  - Example of object instantiation:
-        var a = (new A(3)).contructor();
+        var a = (new A(3)).constructor();
         a.print();
-        var b = (new B(5)).contructor();
+        var b = (new B(5)).constructor();
         b.print();
         b.$uper.print();
    *************************************************************************/
