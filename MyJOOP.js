@@ -76,7 +76,6 @@ limitations under the License.
            "public" :
             {"base_constructor_arguments" :
               function () { var arg_A = [arguments[0], "other"]; return arg_A; }
-            }
             ,"constructor" : function (b) {}
             ,"$virtual_method" : function () {return this.a_public_property*100;}
             }
@@ -84,7 +83,7 @@ limitations under the License.
 //        ,"private" : {}
           });
    *
-   *  - Example of object instanciation:
+   *  - Example of object instantiation:
         var a = (new A(3)).contructor();
         a.print();
         var b = (new B(5)).contructor();
