@@ -47,6 +47,7 @@ limitations under the License.
    *    (new myClass(param1 , param2 , ...)).constructor(); )
    *
    *  - Example of class creation:* /
+
         var A = Object.extend("A",
           {"static" :
             {"counter_start" : 5 // all static propertiers and methods should
@@ -58,13 +59,13 @@ limitations under the License.
               }
             }
           ,"public" :
-            {"a_public_property_A" : ("This value does not matter. It will be"
+            {"a_public_property_of_A" : ("This value does not matter. It will be"
                +"initialize with undefined before the constructon is called.")
 
-            ,"constructor" : function (a, other) { this.id = A.get_counter(); this.a_public_property_A = a; }
+            ,"constructor" : function (a, other) { this.id(A.get_counter()); this.a_public_property_of_A(a); }
 
-            ,"$virtual_method" : function () {return this.a_public_property;}
-            ,"print" : function () { console.message("The value is "+this.virtual_method()); }
+            ,"$virtual_method" : function () { return this.a_public_property_of_A(); }
+            ,"print" : function () { console.log("The value is "+this.virtual_method()); }
             }
 //        ,"protected" : {}
           ,"private" :
@@ -77,18 +78,24 @@ limitations under the License.
             {"base_constructor_arguments" :
               function () { var arg_A = [arguments[0], "other"]; return arg_A; }
             ,"constructor" : function (b) {}
-            ,"$virtual_method" : function () {return this.a_public_property*100;}
+            ,"$virtual_method" : function () { return this.a_public_property_of_A() * 100; }
             }
 //        ,"protected" : {}
 //        ,"private" : {}
           });
    *
-   *  - Example of object instantiation:
+   *  - Example of object instanciation:
+
         var a = (new A(3)).constructor();
         a.print();
         var b = (new B(5)).constructor();
         b.print();
         b.$uper.print();
+        var old_val = b.a_public_property_of_A();     // getting a property
+        var new_val = b.a_public_property_of_A(1000); // setting a property
+        console.log("the old value is "+old_val);
+        console.log("the new value is "+new_val);
+
    *************************************************************************/
 
   if (global.Object.extend) {
@@ -115,18 +122,17 @@ limitations under the License.
 
     var _New_class = function _class () {
         var args = Array.prototype.slice.call(arguments, 0);
-        this.constructor = function _const () {
+        this.constructor = function _const_ () {
             var contx = _initialize.call(_New_class.prototype, args);
             return contx.public;
           };
-        return this;
       };
 
     _New_class.class_name = new_class_name;
     _add_extend(_New_class);
 
     if (new_class_definitions.static) {
-      _transfer_new_properties.call(_New_class, new_class_definitions.static);
+      _transfer_static_properties.call(_New_class, new_class_definitions.static);
     }
 
     _New_class.prototype = Object.create(Base_class.prototype);
@@ -156,7 +162,7 @@ limitations under the License.
       if (typeof this.public.base_constructor_arguments !== "function")
         throw "The base_constructor_arguments must be a function.";
 
-      base_args = this.public.base_constructor_arguments(args || []);
+      base_args = this.public.base_constructor_arguments.apply({}, args || []);
 
       if (! (typeof base_args === "object" && base_args instanceof Array))
         throw "The base_constructor_arguments function must returned an Array.";
@@ -174,9 +180,9 @@ limitations under the License.
 
     _set_ref();
 
-    _create_class_properties.call(contx.public,   this.public,    contx.state);
-    _create_class_properties.call(contx.state,    this.private,   contx.state);
-    _create_class_properties.call(contx.state.P$, this.protected, contx.state);
+    _create_class_members.call(contx.public,   this.public,    contx.state);
+    _create_class_members.call(contx.state,    this.private,   contx.state);
+    _create_class_members.call(contx.state.P$, this.protected, contx.state);
 
     var vmethods = {};
     var P$_vmethods = {};
@@ -219,11 +225,11 @@ limitations under the License.
         return c;
       };
 
-    contx.public.type_info_name = function () {
+    contx.public.type_info_name = function _type_info_name_ () {
         return local_class.class_name;
       };
 
-    contx.public.clone = function () {
+    contx.public.clone = function _clone_ () {
         var local_contx = _initialize.call(local_proto, undefined, contx);
         return local_contx.public;
       };
@@ -301,20 +307,30 @@ limitations under the License.
         || name === '$uperClass' || name === "$uper";
   }
 
-  function _create_class_properties(definition, state) {
+  function _create_class_members(definition, state) {
     for (var pn in definition) {
       if (definition.hasOwnProperty(pn) && !_is_keyword(pn)) {
         var prop = definition[pn];
         if (typeof prop === "function") {
           this[pn] = _bind_method(prop, state);
         } else {
-          this[pn] = undefined;
+          if (pn.charAt(0) === "$")
+            throw 'The '+pn+' property name connot start with an "$".'
+          this[pn] = (function () {
+             var mem;
+             return function _property_accessor_ () {
+                 if (arguments.length >= 1) {
+                   mem = arguments[0];
+                 }
+                 return mem;
+               };
+            })();
         }
       }
     }
   }
 
-  function _transfer_new_properties(definition) {
+  function _transfer_static_properties(definition) {
     for (var pn in definition) {
       if (definition.hasOwnProperty(pn) && !_is_keyword(pn)
           && !this.hasOwnProperty(pn)) {
@@ -346,7 +362,7 @@ limitations under the License.
     _class.extend = function () {
       var args = _bind_method(Array.prototype.slice, arguments)(0);
       args.unshift(_class);
-      return _bind_method(_extend_class, local_context, args)();
+      return _extend_class.apply(local_context, args);
     };
   }
 
