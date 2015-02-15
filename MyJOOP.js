@@ -331,6 +331,11 @@ limitations under the License.
                  if (arguments.length >= 1) {
                    mem = arguments[0];
                  }
+                 if (global.hasOwnProperty('_Package_MyJOOP_debug_')) {
+                   this.debug[pn] = mem;
+                 } else if (this.hasOwnProperty('debug')) {
+                   delete this.debug;
+                 }
                  return mem;
                };
             })();
