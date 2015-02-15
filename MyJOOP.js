@@ -142,6 +142,15 @@ limitations under the License.
     _New_class.prototype.protected = new_class_definitions.protected || {};
     _New_class.prototype.private = new_class_definitions.private || {};
 
+    if (_New_class.prototype.public.hasOwnProperty('toString') {
+      _New_class.prototype.public['$toString'] = _New_class.prototype.public['toString']
+      delete _New_class.prototype.public.toString;
+    } else if (!_New_class.prototype.public.hasOwnProperty('$toString')) {
+      _New_class.prototype.public['$toString'] = function(){
+          return "[object "+new_class_name+"]";
+        };
+    }
+
     return _New_class;
   }
 
